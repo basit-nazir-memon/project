@@ -26,6 +26,7 @@ import {
   AlertTriangle
 } from 'lucide-react-native';
 import { globalstyles } from '@/app/commans/style';
+import HeaderComponent from '@/app/components/Header';
 
 export default function DashboardScreen() {
   const [tankLevel, setTankLevel] = useState(25);
@@ -99,18 +100,7 @@ export default function DashboardScreen() {
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
       
       {/* Header */}
-      <View style={globalstyles.header}>
-        <TouchableOpacity onPress={openDrawer} style={globalstyles.menuButton}>
-          <Menu size={24} color="#1F2937" />
-        </TouchableOpacity>
-        <Text style={globalstyles.headerTitle}>AquaFlow</Text>
-        <TouchableOpacity style={globalstyles.notificationButton} onPress={openNotifications}>
-          <Bell size={24} color="#1F2937" />
-          <View style={globalstyles.notificationBadge}>
-            <Text style={globalstyles.notificationBadgeText}>3</Text>
-          </View>
-        </TouchableOpacity>
-      </View>
+      <HeaderComponent openDrawer={openDrawer} openNotifications={openNotifications} />
 
       <ScrollView 
         style={styles.content} 

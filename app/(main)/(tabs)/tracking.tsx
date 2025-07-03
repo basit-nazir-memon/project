@@ -20,6 +20,9 @@ import {
   Truck,
   User
 } from 'lucide-react-native';
+import HeaderComponent from '@/app/components/Header';
+import { DrawerActions } from '@react-navigation/native';
+import { router, useNavigation } from 'expo-router';
 
 const { width, height } = Dimensions.get('window');
 
@@ -30,6 +33,7 @@ export default function TrackingScreen() {
     longitude: 67.0011,
   });
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation();
 
   useEffect(() => {
     // Simulate real-time updates
@@ -76,23 +80,21 @@ export default function TrackingScreen() {
     );
   };
 
+  const openDrawer = () => {
+    navigation.dispatch(DrawerActions.openDrawer());
+  };
+
+  const openNotifications = () => {
+    router.push('/(main)/notifications');
+  };
+  
+
   return (
-    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
+    <View style={[styles.container, { paddingBottom: insets.bottom , paddingTop: insets.top }]}>
       <StatusBar barStyle="light-content" />
       
       {/* Header */}
-      <LinearGradient
-        colors={['#007AFF', '#0056CC']}
-        style={[styles.header, { paddingTop: insets.top + 20 }]}
-      >
-        <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>Live Tracking</Text>
-          <View style={styles.orderInfo}>
-            <Text style={styles.orderId}>Order #{orderDetails.id}</Text>
-            <Text style={styles.orderType}>{orderDetails.type} - {orderDetails.volume}</Text>
-          </View>
-        </View>
-      </LinearGradient>
+      <HeaderComponent openDrawer={openDrawer} openNotifications={openNotifications} />
 
       {/* Map Placeholder */}
       <View style={styles.mapContainer}>
@@ -194,7 +196,7 @@ export default function TrackingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FF',
+    backgroundColor: '#ffffff',
   },
   header: {
     paddingBottom: 20,

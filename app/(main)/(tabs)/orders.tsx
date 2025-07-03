@@ -13,6 +13,7 @@ import { ArrowLeft, Clock, CircleCheck as CheckCircle, Truck, Droplets, Calendar
 import { router, useNavigation } from 'expo-router';
 import { DrawerActions } from '@react-navigation/native';
 import { globalstyles } from '@/app/commans/style';
+import HeaderComponent from '@/app/components/Header';
 
 export default function OrdersScreen() {
   const [activeTab, setActiveTab] = useState('active');
@@ -150,36 +151,12 @@ export default function OrdersScreen() {
 
   return (
 
-    <View style={[globalstyles.container, { paddingBottom: insets.bottom }]}>
+    <View style={[globalstyles.container, { paddingBottom: insets.bottom , paddingTop: insets.top }]}>
       
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-      
-      {/* Header */}
-      <View style={[globalstyles.header, { paddingTop: insets.top + 20 }]}>
-        <TouchableOpacity onPress={openDrawer} style={globalstyles.menuButton}>
-          <Menu size={24} color="#1F2937" />
-        </TouchableOpacity>
-        <Text style={globalstyles.headerTitle}>AquaFlow</Text>
-        <TouchableOpacity style={globalstyles.notificationButton} onPress={openNotifications}>
-          <Bell size={24} color="#1F2937" />
-          <View style={globalstyles.notificationBadge}>
-            <Text style={globalstyles.notificationBadgeText}>3</Text>
-          </View>
-        </TouchableOpacity>
-      </View>
 
-      {/* Header
-      <LinearGradient
-        colors={['#007AFF', '#0056CC']}
-        style={[styles.header, { paddingTop: insets.top + 20 }]}
-      >
-        <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>My Orders</Text>
-          <TouchableOpacity style={styles.filterButton}>
-            <Filter size={20} color="#FFFFFF" />
-          </TouchableOpacity>
-        </View>
-      </LinearGradient> */}
+      {/* Header */}
+        <HeaderComponent openDrawer={openDrawer} openNotifications={openNotifications} />
 
       {/* Tabs */}
       <View style={styles.tabContainer}>

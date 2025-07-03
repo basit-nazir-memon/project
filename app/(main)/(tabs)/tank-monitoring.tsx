@@ -8,7 +8,7 @@ import {
   StatusBar,
   Dimensions,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useNavigation, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { 
   ArrowLeft, 
@@ -24,6 +24,8 @@ import {
   WifiOff,
   AlertTriangle
 } from 'lucide-react-native';
+import HeaderComponent from '@/app/components/Header';
+import { DrawerActions } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 
@@ -37,6 +39,7 @@ export default function TankMonitoringScreen() {
   const [todayUsage, setTodayUsage] = useState(46);
   const [weeklyUsage, setWeeklyUsage] = useState(280);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const navigation = useNavigation();
 
   const weeklyData = [
     { day: 'Mon', level: 85 },
@@ -114,28 +117,20 @@ export default function TankMonitoringScreen() {
     }
   };
 
+  const openDrawer = () => {
+    navigation.dispatch(DrawerActions.openDrawer());
+  };
+
+  const openNotifications = () => {
+    router.push('/(main)/notifications');
+  };
+
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
       
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <ArrowLeft size={24} color="#1F2937" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Tank Monitor</Text>
-        <TouchableOpacity 
-          style={[styles.refreshButton, isRefreshing && styles.refreshing]}
-          onPress={handleRefresh}
-          disabled={isRefreshing}
-        >
-          <RefreshCw size={20} color="#007AFF" />
-          <Text style={styles.refreshText}>Refresh</Text>
-        </TouchableOpacity>
-      </View>
+      <HeaderComponent openDrawer={openDrawer} openNotifications={openNotifications} />
 
       <ScrollView 
         style={styles.content} 
@@ -324,7 +319,7 @@ export default function TankMonitoringScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#ffffff',
   },
   header: {
     flexDirection: 'row',
