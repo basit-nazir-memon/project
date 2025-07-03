@@ -1,9 +1,9 @@
 import { Tabs } from 'expo-router';
 import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Home, Package, MapPin, User, Droplet } from 'lucide-react-native';
+import { Home, Package, MapPin, User } from 'lucide-react-native';
 
-export default function TabLayout() {
+export default function DriverTabLayout() {
   const insets = useSafeAreaInsets();
 
   return (
@@ -34,36 +34,36 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: 'Dashboard',
           tabBarIcon: ({ color, size }) => (
             <Home size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="tank-monitoring"
+        name="deliveries"
         options={{
-          title: 'Tank Monitoring',
-          tabBarIcon: ({ color, size }) => (
-            <Droplet size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="orders"
-        options={{
-          title: 'Orders',
+          title: 'Deliveries',
           tabBarIcon: ({ color, size }) => (
             <Package size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="tracking"
+        name="map"
         options={{
-          title: 'Tracking',
+          title: 'Map',
           tabBarIcon: ({ color, size }) => (
             <MapPin size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ color, size }) => (
+            <User size={size} color={color} />
           ),
         }}
       />

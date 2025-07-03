@@ -1,21 +1,11 @@
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Drawer } from 'expo-router/drawer';
 import { DrawerContentScrollView, DrawerItem } from '@react-navigation/drawer';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-import {
-  User,
-  MapPin,
-  CreditCard,
-  Droplets,
-  Settings,
-  Bell,
-  HelpCircle,
-  LogOut,
-  X,
-} from 'lucide-react-native';
+import { User, Package, MapPin, Settings, Bell, CircleHelp as HelpCircle, LogOut, X, Truck } from 'lucide-react-native';
 
-function CustomDrawerContent(props: any) {
+function CustomDriverDrawerContent(props: any) {
   const router = useRouter();
 
   const handleLogout = () => {
@@ -27,82 +17,52 @@ function CustomDrawerContent(props: any) {
   };
 
   return (
-    <DrawerContentScrollView
-      {...props}
-      contentContainerStyle={styles.drawerContent}
-    >
+    <DrawerContentScrollView {...props} contentContainerStyle={styles.drawerContent}>
       <View style={styles.drawerHeader}>
         <TouchableOpacity style={styles.closeButton} onPress={closeDrawer}>
           <X size={24} color="#6B7280" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.userInfo} onPress={() => router.push('/(main)/profile')}>
+        <View style={styles.userInfo}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>JD</Text>
+            <Text style={styles.avatarText}>AK</Text>
           </View>
           <View style={styles.userDetails}>
-            <Text style={styles.userName}>John Doe</Text>
-            <Text style={styles.userType}>Customer</Text>
+            <Text style={styles.userName}>Ahmad Khan</Text>
+            <Text style={styles.userType}>Driver</Text>
+            <Text style={styles.vehicleInfo}>Vehicle: TK-001</Text>
           </View>
-        </TouchableOpacity>
+        </View>
       </View>
 
       <View style={styles.drawerSection}>
         <DrawerItem
-          label="Saved Addresses"
-          icon={({ color, size }) => (
-            <View style={{ width: 28, alignItems: 'center' }}>
-              <MapPin size={size} color={color} />
-            </View>
-          )}
-          onPress={() => router.push('/(main)/addresses')}
-          labelStyle={[styles.drawerLabel, { marginLeft: 8 }]}
-          activeBackgroundColor="#F0F8FF"
-          activeTintColor="#007AFF"
-        />
-        <DrawerItem
-          label="Payment Methods"
-          icon={({ color, size }) => (
-            <View style={{ width: 28, alignItems: 'center' }}>
-              <CreditCard size={size} color={color} />
-            </View>
-          )}
-          onPress={() => router.push('/(main)/payments')}
+          label="My Deliveries"
+          icon={({ color, size }) => <Package size={size} color={color} />}
+          onPress={() => router.push('/(driver)/(tabs)/deliveries')}
           labelStyle={[styles.drawerLabel, { marginLeft: 8 }]}
           activeBackgroundColor="#F0F8FF"
           activeTintColor="#007AFF"
         />
         <DrawerItem
           label="Settings"
-          icon={({ color, size }) => (
-            <View style={{ width: 28, alignItems: 'center' }}>
-              <Settings size={size} color={color} />
-            </View>
-          )}
-          onPress={() => router.push('/(main)/settings')}
+          icon={({ color, size }) => <Settings size={size} color={color} />}
+          onPress={() => router.push('/(driver)/settings')}
           labelStyle={[styles.drawerLabel, { marginLeft: 8 }]}
           activeBackgroundColor="#F0F8FF"
           activeTintColor="#007AFF"
         />
         <DrawerItem
           label="Notifications"
-          icon={({ color, size }) => (
-            <View style={{ width: 28, alignItems: 'center' }}>
-              <Bell size={size} color={color} />
-            </View>
-          )}
-          onPress={() => router.push('/(main)/notifications')}
+          icon={({ color, size }) => <Bell size={size} color={color} />}
+          onPress={() => router.push('/(driver)/notifications')}
           labelStyle={[styles.drawerLabel, { marginLeft: 8 }]}
           activeBackgroundColor="#F0F8FF"
           activeTintColor="#007AFF"
         />
         <DrawerItem
           label="Help & Support"
-          icon={({ color, size }) => (
-            <View style={{ width: 28, alignItems: 'center' }}>
-              <HelpCircle size={size} color={color} />
-            </View>
-          )}
-          onPress={() => router.push('/(main)/help')}
+          icon={({ color, size }) => <HelpCircle size={size} color={color} />}
+          onPress={() => router.push('/(driver)/help')}
           labelStyle={[styles.drawerLabel, { marginLeft: 8 }]}
           activeBackgroundColor="#F0F8FF"
           activeTintColor="#007AFF"
@@ -119,11 +79,11 @@ function CustomDrawerContent(props: any) {
   );
 }
 
-export default function MainLayout() {
+export default function DriverLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Drawer
-        drawerContent={CustomDrawerContent}
+        drawerContent={CustomDriverDrawerContent}
         screenOptions={{
           headerShown: false,
           drawerStyle: {
@@ -135,13 +95,13 @@ export default function MainLayout() {
         }}
       >
         <Drawer.Screen name="(tabs)" />
-        <Drawer.Screen name="addresses" />
-        <Drawer.Screen name="payments" />
-        {/* <Drawer.Screen name="tank-monitoring" /> */}
-        <Drawer.Screen name="profile" />
+        <Drawer.Screen name="deliveries" />
+        <Drawer.Screen name="vehicle" />
+        <Drawer.Screen name="earnings" />
         <Drawer.Screen name="settings" />
         <Drawer.Screen name="notifications" />
         <Drawer.Screen name="help" />
+        <Drawer.Screen name="order/[id]" />
       </Drawer>
     </GestureHandlerRootView>
   );
@@ -202,6 +162,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'Inter-Regular',
     color: '#6B7280',
+    marginBottom: 2,
+  },
+  vehicleInfo: {
+    fontSize: 12,
+    fontFamily: 'Inter-Regular',
+    color: '#9CA3AF',
   },
   drawerSection: {
     flex: 1,

@@ -11,35 +11,131 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Droplets, Phone } from 'lucide-react-native';
+import {
+  Droplets,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  User,
+  Truck,
+} from 'lucide-react-native';
+import axios from 'axios';
+import { config } from '../../config';
+import CustomAlert from '../components/CustomAlert';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function LoginScreen() {
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [userType, setUserType] = useState<'user' | 'driver'>('user');
   const router = useRouter();
 
-  const handleLogin = () => {
-    if (!phoneNumber.trim()) {
-      Alert.alert('Error', 'Please enter your phone number');
-      return;
-    }
-    
-    if (phoneNumber.length < 10) {
-      Alert.alert('Error', 'Please enter a valid phone number');
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+
+  const handleLogin = async () => {
+    if (!email.trim() || !password.trim()) {
+      Alert.alert('Error', 'Please enter both email and password');
       return;
     }
 
-    // Navigate to OTP screen
-    router.push('/auth/otp');
+    if (!email.includes('@')) {
+      Alert.alert('Error', 'Please enter a valid email address');
+      return;
+    }
+
+    if (password.length < 6) {
+      Alert.alert('Error', 'Password must be at least 6 characters');
+      return;
+    }
+
+
+    // declare user role  in variable 
+    let user = 'user';
+
+
+    setIsLoading(true);
+    try {
+      const response = await axios.post(`${config.backendUrl}/auth/login`, {
+        email,
+        password,
+      });
+      console.log('Login response:', response.data);
+
+      if (response.status) {
+        const { token, id, role,avatar,name, email } = response.data;
+        await AsyncStorage.setItem('userData', JSON.stringify({ token, id, role, avatar, name, email }));
+        user = role;
+        console.log('Login successful:', { token, id, role, avatar, name, email });
+      } else {
+        setAlertTitle('Error');
+        setAlertMessage(response.data.message || 'Login failed. Please try again.');
+        setShowAlert(true);
+        setIsLoading(false);
+        return;
+      }
+    } catch (error) {
+      let message = 'An error occurred while Sign in account';
+      if (axios.isAxiosError(error)) {
+        message =
+          error.response?.data?.error ||
+          error.response?.data?.message ||
+          error.message;
+      }
+      setAlertTitle('Error');
+      setAlertMessage(message);
+      setShowAlert(true);
+      setIsLoading(false);
+      return;
+    }
+
+    // Reset form fields
+    setEmail('');
+    setPassword('');
+    setShowPassword(false);
+    // setUserType('user');
+
+    console.log('User type:', user);
+
+    // Navigate based on user type
+    if (user === 'driver') {
+      router.replace('/(driver)/(tabs)');
+    } else {
+      router.replace('/(main)/(tabs)');
+    }
   };
 
+  const handleForgotPassword = () => {
+    router.push('/auth/forgot-password');
+  };
+
+  function loginAsCustomer(): void {
+    setEmail('user@test.com');
+    setPassword('12345678');
+    setUserType('user');
+    // TODO: Login Using hardcoded credentials for testing
+    // router.push('/(main)/(tabs)');
+    // handleLogin();
+  }
+
+  function loginAsDriver(): void {
+    setEmail('driver@test.com');
+    setPassword('12345678');
+    setUserType('driver');
+    // TODO: Login Using hardcoded credentials for testing
+    // router.push('/(driver)/(tabs)');
+    // handleLogin();
+  }
+
   return (
-    <KeyboardAvoidingView 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
-    >
-      <LinearGradient
-        colors={['#007AFF', '#0056CC']}
-        style={styles.background}
+    <LinearGradient colors={['#007AFF', '#0056CC']} style={styles.background}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.container}
       >
         <View style={styles.content}>
           <View style={styles.header}>
@@ -51,21 +147,162 @@ export default function LoginScreen() {
           </View>
 
           <View style={styles.form}>
+            {/* User Type Selection For Testing */}
+            <View style={styles.userTypeContainer}>
+              <Text style={styles.userTypeLabel}>Login as Test User</Text>
+              <View style={styles.userTypeButtons}>
+                <TouchableOpacity
+                  style={[
+                    styles.userTypeButton,
+                    userType === 'user' && styles.userTypeButtonActive,
+                  ]}
+                  onPress={() => loginAsCustomer()}
+                >
+                  <User
+                    size={20}
+                    color={userType === 'user' ? '#007AFF' : '#FFFFFF'}
+                  />
+                  <Text
+                    style={[
+                      styles.userTypeButtonText,
+                      userType === 'user' &&
+                        styles.userTypeButtonTextActive,
+                    ]}
+                  >
+                    Customer
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.userTypeButton,
+                    userType === 'driver' && styles.userTypeButtonActive,
+                  ]}
+                  onPress={() => loginAsDriver()}
+                >
+                  <Truck
+                    size={20}
+                    color={userType === 'driver' ? '#007AFF' : '#FFFFFF'}
+                  />
+                  <Text
+                    style={[
+                      styles.userTypeButtonText,
+                      userType === 'driver' && styles.userTypeButtonTextActive,
+                    ]}
+                  >
+                    Driver
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* User Type Selection */}
+            {/* <View style={styles.userTypeContainer}>
+              <Text style={styles.userTypeLabel}>Login as:</Text>
+              <View style={styles.userTypeButtons}>
+                <TouchableOpacity
+                  style={[
+                    styles.userTypeButton,
+                    userType === 'user' && styles.userTypeButtonActive,
+                  ]}
+                  onPress={() => setUserType('user')}
+                >
+                  <User
+                    size={20}
+                    color={userType === 'user' ? '#007AFF' : '#FFFFFF'}
+                  />
+                  <Text
+                    style={[
+                      styles.userTypeButtonText,
+                      userType === 'user' &&
+                        styles.userTypeButtonTextActive,
+                    ]}
+                  >
+                    Customer
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.userTypeButton,
+                    userType === 'driver' && styles.userTypeButtonActive,
+                  ]}
+                  onPress={() => setUserType('driver')}
+                >
+                  <Truck
+                    size={20}
+                    color={userType === 'driver' ? '#007AFF' : '#FFFFFF'}
+                  />
+                  <Text
+                    style={[
+                      styles.userTypeButtonText,
+                      userType === 'driver' && styles.userTypeButtonTextActive,
+                    ]}
+                  >
+                    Driver
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View> */}
+
             <View style={styles.inputContainer}>
-              <Phone size={20} color="#666666" style={styles.inputIcon} />
+              <Mail size={20} color="#666666" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
-                placeholder="Phone Number"
+                placeholder="Email Address"
                 placeholderTextColor="#999999"
-                value={phoneNumber}
-                onChangeText={setPhoneNumber}
-                keyboardType="phone-pad"
-                maxLength={15}
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
               />
             </View>
 
-            <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-              <Text style={styles.loginButtonText}>Send OTP</Text>
+            <View style={styles.inputContainer}>
+              <Lock size={20} color="#666666" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Password"
+                placeholderTextColor="#999999"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+              <TouchableOpacity
+                style={styles.eyeIcon}
+                onPress={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <EyeOff size={20} color="#666666" />
+                ) : (
+                  <Eye size={20} color="#666666" />
+                )}
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity
+              style={styles.forgotPassword}
+              onPress={handleForgotPassword}
+            >
+              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.loginButton,
+                isLoading && styles.loginButtonDisabled,
+              ]}
+              onPress={handleLogin}
+              disabled={isLoading}
+            >
+              <Text style={styles.loginButtonText}>
+                {isLoading
+                  ? 'Signing In...'
+                  : `Sign In as ${
+                      userType === 'user' ? 'user' : 'Driver'
+                    }`}
+              </Text>
             </TouchableOpacity>
 
             <View style={styles.divider}>
@@ -74,7 +311,7 @@ export default function LoginScreen() {
               <View style={styles.dividerLine} />
             </View>
 
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.signupButton}
               onPress={() => router.push('/auth/signup')}
             >
@@ -82,8 +319,14 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
         </View>
-      </LinearGradient>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+      <CustomAlert
+        visible={showAlert}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={() => setShowAlert(false)}
+      />
+    </LinearGradient>
   );
 }
 
@@ -126,6 +369,44 @@ const styles = StyleSheet.create({
   form: {
     width: '100%',
   },
+  userTypeContainer: {
+    marginBottom: 24,
+  },
+  userTypeLabel: {
+    fontSize: 16,
+    fontFamily: 'Inter-Medium',
+    color: '#FFFFFF',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  userTypeButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  userTypeButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  userTypeButtonActive: {
+    backgroundColor: '#FFFFFF',
+  },
+  userTypeButtonText: {
+    fontSize: 14,
+    fontFamily: 'Inter-Medium',
+    color: '#FFFFFF',
+    marginLeft: 8,
+  },
+  userTypeButtonTextActive: {
+    color: '#007AFF',
+  },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -149,6 +430,19 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Regular',
     color: '#333333',
   },
+  eyeIcon: {
+    padding: 4,
+  },
+  forgotPassword: {
+    alignSelf: 'flex-end',
+    marginBottom: 24,
+  },
+  forgotPasswordText: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: 'rgba(255, 255, 255, 0.8)',
+    textDecorationLine: 'underline',
+  },
   loginButton: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
@@ -160,6 +454,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  loginButtonDisabled: {
+    opacity: 0.7,
   },
   loginButtonText: {
     fontSize: 16,

@@ -7,25 +7,36 @@ import {
   TouchableOpacity,
   StatusBar,
   Alert,
+  Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DrawerActions } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
-import { Menu, Bell, Droplets, Truck, Clock, TrendingUp, Zap, CircleCheck as CheckCircle, ArrowRight } from 'lucide-react-native';
+import { 
+  Menu, 
+  Bell, 
+  Droplets, 
+  Truck, 
+  Clock, 
+  TrendingUp, 
+  Zap, 
+  CircleCheck as CheckCircle, 
+  ArrowRight,
+  AlertTriangle
+} from 'lucide-react-native';
+import { globalstyles } from '@/app/commans/style';
 
 export default function DashboardScreen() {
-  const [selectedService, setSelectedService] = useState<string | null>(null);
+  const [tankLevel, setTankLevel] = useState(25);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
 
-  const handleServiceSelect = (service: string) => {
-    setSelectedService(service);
+  const handleServiceSelect = (service: string, price: string) => {
     Alert.alert(
       'Order Confirmation',
-      `You selected ${service}. Would you like to proceed?`,
+      `You selected ${service} for ${price}. Would you like to proceed?`,
       [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Order Now', onPress: () => router.push('/(main)/(tabs)/orders') }
@@ -41,177 +52,165 @@ export default function DashboardScreen() {
     router.push('/(main)/notifications');
   };
 
+  const ServiceCard = ({ 
+    title, 
+    volume, 
+    price, 
+    time, 
+    available, 
+    icon, 
+    color,
+    onPress 
+  }: any) => (
+    <TouchableOpacity 
+      style={[styles.serviceCard, !available && styles.serviceCardDisabled]} 
+      onPress={available ? onPress : undefined}
+      disabled={!available}
+    >
+      <View style={styles.serviceContent}>
+        <View style={[styles.serviceIcon, { backgroundColor: color + '20' }]}>
+          {icon}
+        </View>
+        <View style={styles.serviceInfo}>
+          <Text style={styles.serviceTitle}>{title}</Text>
+          <Text style={styles.serviceVolume}>{volume}</Text>
+          <View style={styles.serviceDetails}>
+            <Text style={styles.servicePrice}>{price}</Text>
+            <Text style={styles.serviceTime}>• {time}</Text>
+          </View>
+        </View>
+        <View style={styles.serviceRight}>
+          <View style={[
+            styles.availabilityBadge, 
+            { backgroundColor: available ? '#10B981' : '#EF4444' }
+          ]}>
+            <Text style={styles.availabilityText}>
+              {available ? 'Available' : 'Unavailable'}
+            </Text>
+          </View>
+          {available && <ArrowRight size={20} color="#6B7280" />}
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+
   return (
-    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
-      <StatusBar barStyle="light-content" />
+    <View style={[globalstyles.container, { paddingTop: insets.top }]}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
       
       {/* Header */}
-      <LinearGradient
-        colors={['#007AFF', '#0056CC']}
-        style={[styles.header, { paddingTop: insets.top + 20 }]}
-      >
-        <View style={styles.headerContent}>
-          <TouchableOpacity onPress={openDrawer}>
-            <Menu size={24} color="#FFFFFF" />
-          </TouchableOpacity>
-          <View style={styles.headerTitle}>
-            <Text style={styles.greeting}>Good Morning!</Text>
-            <Text style={styles.userName}>John Doe</Text>
+      <View style={globalstyles.header}>
+        <TouchableOpacity onPress={openDrawer} style={globalstyles.menuButton}>
+          <Menu size={24} color="#1F2937" />
+        </TouchableOpacity>
+        <Text style={globalstyles.headerTitle}>AquaFlow</Text>
+        <TouchableOpacity style={globalstyles.notificationButton} onPress={openNotifications}>
+          <Bell size={24} color="#1F2937" />
+          <View style={globalstyles.notificationBadge}>
+            <Text style={globalstyles.notificationBadgeText}>3</Text>
           </View>
-          <TouchableOpacity style={styles.notificationButton} onPress={openNotifications}>
-            <Bell size={24} color="#FFFFFF" />
-            <View style={styles.notificationBadge} />
-          </TouchableOpacity>
-        </View>
-      </LinearGradient>
+        </TouchableOpacity>
+      </View>
 
       <ScrollView 
         style={styles.content} 
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
       >
-        {/* Quick Stats */}
-        <View style={styles.statsContainer}>
-          <View style={styles.statCard}>
-            <View style={styles.statIconContainer}>
-              <Droplets size={20} color="#007AFF" />
-            </View>
-            <Text style={styles.statValue}>85%</Text>
-            <Text style={styles.statLabel}>Tank Level</Text>
-          </View>
-          <View style={styles.statCard}>
-            <View style={styles.statIconContainer}>
-              <Clock size={20} color="#28A745" />
-            </View>
-            <Text style={styles.statValue}>2 hrs</Text>
-            <Text style={styles.statLabel}>Next Refill</Text>
-          </View>
-          <View style={styles.statCard}>
-            <View style={styles.statIconContainer}>
-              <CheckCircle size={20} color="#FF6B35" />
-            </View>
-            <Text style={styles.statValue}>15</Text>
-            <Text style={styles.statLabel}>Completed</Text>
-          </View>
+        {/* Welcome Section */}
+        <View style={styles.welcomeSection}>
+          <Text style={styles.welcomeTitle}>Welcome back, John!</Text>
+          <Text style={styles.welcomeSubtitle}>Your water tank is at {tankLevel}% capacity</Text>
         </View>
 
-        {/* Service Cards */}
-        <View style={styles.servicesContainer}>
-          <Text style={styles.sectionTitle}>Order Water</Text>
+        {/* Low Water Alert */}
+        {tankLevel <= 30 && (
+          <View style={styles.alertCard}>
+            <View style={styles.alertIcon}>
+              <AlertTriangle size={20} color="#F59E0B" />
+            </View>
+            <View style={styles.alertContent}>
+              <Text style={styles.alertTitle}>Low Water Level</Text>
+              <Text style={styles.alertText}>
+                Your tank is running low. Consider ordering a refill.
+              </Text>
+            </View>
+            <TouchableOpacity style={styles.orderNowButton}>
+              <Text style={styles.orderNowButtonText}>Order Now</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Choose Your Service */}
+        <View style={styles.servicesSection}>
+          <Text style={styles.sectionTitle}>Choose Your Service</Text>
           
-          <TouchableOpacity
-            style={[styles.serviceCard, styles.largeServiceCard]}
-            onPress={() => handleServiceSelect('Large Tanker (6000L)')}
-          >
-            <LinearGradient
-              colors={['#007AFF', '#0056CC']}
-              style={styles.serviceGradient}
-            >
-              <View style={styles.serviceContent}>
-                <View style={styles.serviceIcon}>
-                  <Truck size={32} color="#FFFFFF" />
-                </View>
-                <View style={styles.serviceInfo}>
-                  <Text style={styles.serviceTitle}>Large Tanker</Text>
-                  <Text style={styles.serviceSubtitle}>6000 Liters</Text>
-                  <View style={styles.serviceDetails}>
-                    <Text style={styles.servicePrice}>₨ 2,500</Text>
-                    <Text style={styles.serviceTime}>• 2-3 hrs</Text>
-                  </View>
-                </View>
-                <ArrowRight size={20} color="#FFFFFF" />
-              </View>
-            </LinearGradient>
-          </TouchableOpacity>
+          <ServiceCard
+            title="Large Tanker"
+            volume="6000L"
+            price="Rs. 2,500"
+            time="45-60 min"
+            available={true}
+            icon={<Truck size={24} color="#007AFF" />}
+            color="#007AFF"
+            onPress={() => handleServiceSelect('Large Tanker (6000L)', 'Rs. 2,500')}
+          />
 
-          <TouchableOpacity
-            style={[styles.serviceCard, styles.mediumServiceCard]}
-            onPress={() => handleServiceSelect('Small Tanker (3500L)')}
-          >
-            <LinearGradient
-              colors={['#28A745', '#1E7E34']}
-              style={styles.serviceGradient}
-            >
-              <View style={styles.serviceContent}>
-                <View style={styles.serviceIcon}>
-                  <Truck size={28} color="#FFFFFF" />
-                </View>
-                <View style={styles.serviceInfo}>
-                  <Text style={styles.serviceTitle}>Small Tanker</Text>
-                  <Text style={styles.serviceSubtitle}>3500 Liters</Text>
-                  <View style={styles.serviceDetails}>
-                    <Text style={styles.servicePrice}>₨ 1,800</Text>
-                    <Text style={styles.serviceTime}>• 1-2 hrs</Text>
-                  </View>
-                </View>
-                <ArrowRight size={20} color="#FFFFFF" />
-              </View>
-            </LinearGradient>
-          </TouchableOpacity>
+          <ServiceCard
+            title="Small Tanker"
+            volume="3500L"
+            price="Rs. 1,800"
+            time="30-45 min"
+            available={true}
+            icon={<Truck size={20} color="#10B981" />}
+            color="#10B981"
+            onPress={() => handleServiceSelect('Small Tanker (3500L)', 'Rs. 1,800')}
+          />
 
-          <TouchableOpacity
-            style={[styles.serviceCard, styles.smallServiceCard]}
-            onPress={() => handleServiceSelect('20L Water Bottles')}
-          >
-            <LinearGradient
-              colors={['#FF6B35', '#E55B2D']}
-              style={styles.serviceGradient}
-            >
-              <View style={styles.serviceContent}>
-                <View style={styles.serviceIcon}>
-                  <Droplets size={24} color="#FFFFFF" />
-                </View>
-                <View style={styles.serviceInfo}>
-                  <Text style={styles.serviceTitle}>Water Bottles</Text>
-                  <Text style={styles.serviceSubtitle}>20L Bottles</Text>
-                  <View style={styles.serviceDetails}>
-                    <Text style={styles.servicePrice}>₨ 150</Text>
-                    <Text style={styles.serviceTime}>• 30 mins</Text>
-                  </View>
-                </View>
-                <ArrowRight size={20} color="#FFFFFF" />
-              </View>
-            </LinearGradient>
-          </TouchableOpacity>
+          <ServiceCard
+            title="Water Bottles"
+            volume="20L x 10"
+            price="Rs. 500"
+            time="15-30 min"
+            available={false}
+            icon={<Droplets size={20} color="#8B5CF6" />}
+            color="#8B5CF6"
+            onPress={() => handleServiceSelect('Water Bottles (20L x 10)', 'Rs. 500')}
+          />
         </View>
 
         {/* Express Delivery */}
-        <View style={styles.expressContainer}>
-          <TouchableOpacity 
-            style={styles.expressCard}
-            onPress={() => handleServiceSelect('Express Delivery')}
-          >
-            <LinearGradient
-              colors={['#FFB800', '#FF8C00']}
-              style={styles.expressGradient}
-            >
-              <View style={styles.expressContent}>
-                <View style={styles.expressIcon}>
-                  <Zap size={24} color="#FFFFFF" />
-                </View>
-                <View style={styles.expressInfo}>
-                  <Text style={styles.expressTitle}>Express Delivery</Text>
-                  <Text style={styles.expressSubtitle}>Get water within 1 hour</Text>
-                </View>
-                <Text style={styles.expressBadge}>+₨50</Text>
-              </View>
-            </LinearGradient>
+        <View style={styles.expressSection}>
+          <TouchableOpacity style={styles.expressCard}>
+            <View style={styles.expressIcon}>
+              <Zap size={24} color="#F59E0B" />
+            </View>
+            <View style={styles.expressContent}>
+              <Text style={styles.expressTitle}>Express Delivery</Text>
+              <Text style={styles.expressSubtitle}>Get water delivered within 1 hour</Text>
+            </View>
+            <View style={styles.expressPricing}>
+              <Text style={styles.expressPriceText}>+Rs. 300</Text>
+              <Text style={styles.expressBadge}>Premium</Text>
+            </View>
           </TouchableOpacity>
         </View>
 
-        {/* Recommendations */}
-        <View style={styles.recommendationsContainer}>
-          <Text style={styles.sectionTitle}>Recommended for You</Text>
-          <View style={styles.recommendationCard}>
-            <View style={styles.recommendationIcon}>
-              <TrendingUp size={20} color="#007AFF" />
+        {/* Recommended for You */}
+        <View style={styles.recommendedSection}>
+          <View style={styles.recommendedHeader}>
+            <Text style={styles.sectionTitle}>Recommended for You</Text>
+            <TrendingUp size={20} color="#007AFF" />
+          </View>
+          
+          <View style={styles.recommendedCard}>
+            <View style={styles.recommendedContent}>
+              <Text style={styles.recommendedTitle}>Weekly Large Tanker</Text>
+              <Text style={styles.recommendedSubtitle}>Based on your usage pattern</Text>
             </View>
-            <View style={styles.recommendationContent}>
-              <Text style={styles.recommendationTitle}>Next Refill Suggestion</Text>
-              <Text style={styles.recommendationText}>
-                Based on your usage, you'll need a refill on Dec 28, 2024
-              </Text>
-            </View>
+            <TouchableOpacity style={styles.scheduleButton}>
+              <Text style={styles.scheduleButtonText}>Schedule</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
@@ -222,143 +221,165 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FF',
+    backgroundColor: '#FFFFFF',
   },
   header: {
-    paddingBottom: 20,
-    paddingHorizontal: 20,
-  },
-  headerContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
   },
-  headerTitle: {
-    flex: 1,
+  menuButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F9FAFB',
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  greeting: {
-    fontSize: 14,
-    fontFamily: 'Inter-Regular',
-    color: 'rgba(255, 255, 255, 0.8)',
-  },
-  userName: {
-    fontSize: 18,
+  headerTitle: {
+    fontSize: 20,
     fontFamily: 'Inter-SemiBold',
-    color: '#FFFFFF',
+    color: '#1F2937',
   },
   notificationButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F9FAFB',
+    justifyContent: 'center',
+    alignItems: 'center',
     position: 'relative',
   },
   notificationBadge: {
     position: 'absolute',
-    top: -2,
-    right: -2,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#FF3B30',
+    top: 8,
+    right: 8,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#007AFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  notificationBadgeText: {
+    fontSize: 10,
+    fontFamily: 'Inter-Bold',
+    color: '#FFFFFF',
   },
   content: {
     flex: 1,
   },
   contentContainer: {
     paddingHorizontal: 20,
-    paddingTop: 20,
     paddingBottom: 30,
   },
-  statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 24,
+  welcomeSection: {
+    paddingVertical: 24,
   },
-  statCard: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    marginHorizontal: 4,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  statIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#F8F9FF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  statValue: {
-    fontSize: 20,
+  welcomeTitle: {
+    fontSize: 24,
     fontFamily: 'Inter-Bold',
     color: '#1F2937',
-    marginBottom: 4,
+    marginBottom: 8,
   },
-  statLabel: {
-    fontSize: 12,
+  welcomeSubtitle: {
+    fontSize: 16,
     fontFamily: 'Inter-Regular',
     color: '#6B7280',
-    textAlign: 'center',
   },
-  servicesContainer: {
+  alertCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF3C7',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+    borderLeftWidth: 4,
+    borderLeftColor: '#F59E0B',
+  },
+  alertIcon: {
+    marginRight: 12,
+  },
+  alertContent: {
+    flex: 1,
+  },
+  alertTitle: {
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
+    color: '#92400E',
+    marginBottom: 2,
+  },
+  alertText: {
+    fontSize: 12,
+    fontFamily: 'Inter-Regular',
+    color: '#92400E',
+  },
+  orderNowButton: {
+    backgroundColor: '#F59E0B',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  orderNowButtonText: {
+    fontSize: 12,
+    fontFamily: 'Inter-SemiBold',
+    color: '#FFFFFF',
+  },
+  servicesSection: {
     marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontFamily: 'Inter-SemiBold',
     color: '#1F2937',
     marginBottom: 16,
   },
   serviceCard: {
-    borderRadius: 20,
-    marginBottom: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  largeServiceCard: {
-    height: 100,
-  },
-  mediumServiceCard: {
-    height: 90,
-  },
-  smallServiceCard: {
-    height: 80,
-  },
-  serviceGradient: {
-    flex: 1,
-    borderRadius: 20,
-    padding: 20,
+  serviceCardDisabled: {
+    opacity: 0.6,
   },
   serviceContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
   },
   serviceIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: 16,
   },
   serviceInfo: {
     flex: 1,
   },
   serviceTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: 'Inter-SemiBold',
-    color: '#FFFFFF',
+    color: '#1F2937',
     marginBottom: 4,
   },
-  serviceSubtitle: {
+  serviceVolume: {
     fontSize: 14,
     fontFamily: 'Inter-Regular',
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: '#6B7280',
     marginBottom: 8,
   },
   serviceDetails: {
@@ -368,96 +389,122 @@ const styles = StyleSheet.create({
   servicePrice: {
     fontSize: 16,
     fontFamily: 'Inter-Bold',
-    color: '#FFFFFF',
+    color: '#007AFF',
   },
   serviceTime: {
     fontSize: 12,
     fontFamily: 'Inter-Regular',
-    color: 'rgba(255, 255, 255, 0.7)',
+    color: '#6B7280',
     marginLeft: 8,
   },
-  expressContainer: {
+  serviceRight: {
+    alignItems: 'flex-end',
+    gap: 8,
+  },
+  availabilityBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  availabilityText: {
+    fontSize: 10,
+    fontFamily: 'Inter-SemiBold',
+    color: '#FFFFFF',
+  },
+  expressSection: {
     marginBottom: 24,
   },
   expressCard: {
-    borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  expressGradient: {
-    borderRadius: 16,
-    padding: 20,
-  },
-  expressContent: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#FFFBEB',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#FDE68A',
   },
   expressIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#FEF3C7',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: 16,
   },
-  expressInfo: {
+  expressContent: {
     flex: 1,
   },
   expressTitle: {
     fontSize: 16,
     fontFamily: 'Inter-SemiBold',
-    color: '#FFFFFF',
-    marginBottom: 2,
+    color: '#92400E',
+    marginBottom: 4,
   },
   expressSubtitle: {
     fontSize: 12,
     fontFamily: 'Inter-Regular',
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: '#92400E',
   },
-  expressBadge: {
+  expressPricing: {
+    alignItems: 'flex-end',
+  },
+  expressPriceText: {
     fontSize: 14,
     fontFamily: 'Inter-Bold',
+    color: '#92400E',
+    marginBottom: 4,
+  },
+  expressBadge: {
+    fontSize: 10,
+    fontFamily: 'Inter-SemiBold',
     color: '#FFFFFF',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: '#F59E0B',
     paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingVertical: 2,
     borderRadius: 8,
   },
-  recommendationsContainer: {
+  recommendedSection: {
     marginBottom: 24,
   },
-  recommendationCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
+  recommendedHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    justifyContent: 'space-between',
+    marginBottom: 16,
   },
-  recommendationIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#F0F8FF',
-    justifyContent: 'center',
+  recommendedCard: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 16,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
-  recommendationContent: {
+  recommendedContent: {
     flex: 1,
   },
-  recommendationTitle: {
-    fontSize: 14,
+  recommendedTitle: {
+    fontSize: 16,
     fontFamily: 'Inter-SemiBold',
     color: '#1F2937',
     marginBottom: 4,
   },
-  recommendationText: {
+  recommendedSubtitle: {
     fontSize: 12,
     fontFamily: 'Inter-Regular',
     color: '#6B7280',
-    lineHeight: 16,
+  },
+  scheduleButton: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  scheduleButtonText: {
+    fontSize: 12,
+    fontFamily: 'Inter-SemiBold',
+    color: '#FFFFFF',
   },
 });

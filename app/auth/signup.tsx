@@ -8,49 +8,141 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, Phone, Home, MapPin, User } from 'lucide-react-native';
+import {
+  ArrowLeft,
+  Mail,
+  Home,
+  MapPin,
+  User,
+  Lock,
+  Eye,
+  EyeOff,
+} from 'lucide-react-native';
+import axios from 'axios';
+import { config } from '../../config';
+import CustomAlert from '../components/CustomAlert';
 
 export default function SignupScreen() {
   const [formData, setFormData] = useState({
-    phoneNumber: '',
     fullName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
     houseNumber: '',
     portion: 'upper',
     area: '',
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const handleSignup = () => {
-    if (!formData.phoneNumber.trim() || !formData.fullName.trim() || 
-        !formData.houseNumber.trim() || !formData.area.trim()) {
-      Alert.alert('Error', 'Please fill in all required fields');
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+
+  const handleSignup = async () => {
+    if (
+      !formData.fullName.trim() ||
+      !formData.email.trim() ||
+      !formData.password.trim() ||
+      !formData.confirmPassword.trim() ||
+      !formData.houseNumber.trim() ||
+      !formData.area.trim()
+    ) {
+      setAlertTitle('Error');
+      setAlertMessage('Please fill in all fields');
+      setShowAlert(true);
       return;
     }
 
-    // Navigate to OTP screen
-    router.push('/auth/otp');
+    if (!formData.email.includes('@')) {
+      setAlertTitle('Error');
+      setAlertMessage('Please enter a valid email address');
+      setShowAlert(true);
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setAlertTitle('Error');
+      setAlertMessage('Password must be at least 6 characters');
+      setShowAlert(true);
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setAlertTitle('Error');
+      setAlertMessage('Passwords do not match');
+      setShowAlert(true);
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const response = await axios.post(
+        `${config.backendUrl}/auth/signup`,
+        formData
+      );
+      if (response.data.msg) {
+        setAlertTitle('Success');
+        setAlertMessage('Account created successfully');
+        setShowAlert(true);
+        router.replace('/auth/login');
+      } else {
+        setAlertTitle('Error');
+        setAlertMessage(response.data.message || 'Failed to create account');
+        setShowAlert(true);
+      }
+    } catch (error) {
+      let message = 'An error occurred while creating account';
+      if (axios.isAxiosError(error)) {
+        message =
+          error.response?.data?.error ||
+          error.response?.data?.message ||
+          error.message;
+      }
+      setAlertTitle('Error');
+      setAlertMessage(message);
+      setShowAlert(true);
+    } finally {
+      setIsLoading(false);
+    }
+
+    // TODO: Reset form data after successful signup
+    // setFormData({
+    //   fullName: '',
+    //   email: '',
+    //   password: '',
+    //   confirmPassword: '',
+    //   houseNumber: '',
+    //   portion: 'upper',
+    //   area: '',
+    // });
+    // setShowPassword(false);
+    // setShowConfirmPassword(false);
+    // setIsLoading(false);
   };
 
   const updateFormData = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   return (
-    <KeyboardAvoidingView 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
-    >
-      <LinearGradient
-        colors={['#007AFF', '#0056CC']}
-        style={styles.background}
+    <LinearGradient colors={['#007AFF', '#0056CC']} style={styles.background}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.container}
       >
-        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          style={styles.scrollView}
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.header}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.backButton}
               onPress={() => router.back()}
             >
@@ -69,20 +161,72 @@ export default function SignupScreen() {
                 placeholderTextColor="#999999"
                 value={formData.fullName}
                 onChangeText={(value) => updateFormData('fullName', value)}
+                autoCapitalize="words"
               />
             </View>
 
             <View style={styles.inputContainer}>
-              <Phone size={20} color="#666666" style={styles.inputIcon} />
+              <Mail size={20} color="#666666" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
-                placeholder="Phone Number"
+                placeholder="Email Address"
                 placeholderTextColor="#999999"
-                value={formData.phoneNumber}
-                onChangeText={(value) => updateFormData('phoneNumber', value)}
-                keyboardType="phone-pad"
-                maxLength={15}
+                value={formData.email}
+                onChangeText={(value) => updateFormData('email', value)}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
               />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Lock size={20} color="#666666" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Password"
+                placeholderTextColor="#999999"
+                value={formData.password}
+                onChangeText={(value) => updateFormData('password', value)}
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+              <TouchableOpacity
+                style={styles.eyeIcon}
+                onPress={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <EyeOff size={20} color="#666666" />
+                ) : (
+                  <Eye size={20} color="#666666" />
+                )}
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Lock size={20} color="#666666" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Confirm Password"
+                placeholderTextColor="#999999"
+                value={formData.confirmPassword}
+                onChangeText={(value) =>
+                  updateFormData('confirmPassword', value)
+                }
+                secureTextEntry={!showConfirmPassword}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+              <TouchableOpacity
+                style={styles.eyeIcon}
+                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                {showConfirmPassword ? (
+                  <EyeOff size={20} color="#666666" />
+                ) : (
+                  <Eye size={20} color="#666666" />
+                )}
+              </TouchableOpacity>
             </View>
 
             <View style={styles.inputContainer}>
@@ -102,26 +246,36 @@ export default function SignupScreen() {
                 <TouchableOpacity
                   style={[
                     styles.portionButton,
-                    formData.portion === 'upper' && styles.portionButtonActive
+                    formData.portion === 'upper' && styles.portionButtonActive,
                   ]}
                   onPress={() => updateFormData('portion', 'upper')}
                 >
-                  <Text style={[
-                    styles.portionButtonText,
-                    formData.portion === 'upper' && styles.portionButtonTextActive
-                  ]}>Upper Portion</Text>
+                  <Text
+                    style={[
+                      styles.portionButtonText,
+                      formData.portion === 'upper' &&
+                        styles.portionButtonTextActive,
+                    ]}
+                  >
+                    Upper Portion
+                  </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[
                     styles.portionButton,
-                    formData.portion === 'lower' && styles.portionButtonActive
+                    formData.portion === 'lower' && styles.portionButtonActive,
                   ]}
                   onPress={() => updateFormData('portion', 'lower')}
                 >
-                  <Text style={[
-                    styles.portionButtonText,
-                    formData.portion === 'lower' && styles.portionButtonTextActive
-                  ]}>Lower Portion</Text>
+                  <Text
+                    style={[
+                      styles.portionButtonText,
+                      formData.portion === 'lower' &&
+                        styles.portionButtonTextActive,
+                    ]}
+                  >
+                    Lower Portion
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -130,27 +284,45 @@ export default function SignupScreen() {
               <MapPin size={20} color="#666666" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
-                placeholder="Area/Neighborhood"
+                placeholder="Address Area"
                 placeholderTextColor="#999999"
                 value={formData.area}
                 onChangeText={(value) => updateFormData('area', value)}
+                autoCapitalize="words"
               />
             </View>
 
-            <TouchableOpacity style={styles.signupButton} onPress={handleSignup}>
-              <Text style={styles.signupButtonText}>Create Account</Text>
+            <TouchableOpacity
+              style={[
+                styles.signupButton,
+                isLoading && styles.signupButtonDisabled,
+              ]}
+              onPress={handleSignup}
+              disabled={isLoading}
+            >
+              <Text style={styles.signupButtonText}>
+                {isLoading ? 'Creating Account...' : 'Create Account'}
+              </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.loginButton}
               onPress={() => router.push('/auth/login')}
             >
-              <Text style={styles.loginButtonText}>Already have an account? Sign In</Text>
+              <Text style={styles.loginButtonText}>
+                Already have an account? Sign In
+              </Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
-      </LinearGradient>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+      <CustomAlert
+        visible={showAlert}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={() => setShowAlert(false)}
+      />
+    </LinearGradient>
   );
 }
 
@@ -219,6 +391,9 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Regular',
     color: '#333333',
   },
+  eyeIcon: {
+    padding: 4,
+  },
   portionContainer: {
     marginBottom: 16,
   },
@@ -263,6 +438,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  signupButtonDisabled: {
+    opacity: 0.7,
   },
   signupButtonText: {
     fontSize: 16,

@@ -9,11 +9,15 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Clock, CircleCheck as CheckCircle, Truck, Droplets, Calendar, MapPin, Filter } from 'lucide-react-native';
+import { ArrowLeft, Clock, CircleCheck as CheckCircle, Truck, Droplets, Calendar, MapPin, Filter, Menu, Bell } from 'lucide-react-native';
+import { router, useNavigation } from 'expo-router';
+import { DrawerActions } from '@react-navigation/native';
+import { globalstyles } from '@/app/commans/style';
 
 export default function OrdersScreen() {
   const [activeTab, setActiveTab] = useState('active');
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation();
 
   const activeOrders = [
     {
@@ -135,11 +139,36 @@ export default function OrdersScreen() {
     </View>
   );
 
+  const openDrawer = () => {
+    navigation.dispatch(DrawerActions.openDrawer());
+  };
+
+  const openNotifications = () => {
+    router.push('/(main)/notifications');
+  };
+
+
   return (
-    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
-      <StatusBar barStyle="light-content" />
+
+    <View style={[globalstyles.container, { paddingBottom: insets.bottom }]}>
+      
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
       
       {/* Header */}
+      <View style={[globalstyles.header, { paddingTop: insets.top + 20 }]}>
+        <TouchableOpacity onPress={openDrawer} style={globalstyles.menuButton}>
+          <Menu size={24} color="#1F2937" />
+        </TouchableOpacity>
+        <Text style={globalstyles.headerTitle}>AquaFlow</Text>
+        <TouchableOpacity style={globalstyles.notificationButton} onPress={openNotifications}>
+          <Bell size={24} color="#1F2937" />
+          <View style={globalstyles.notificationBadge}>
+            <Text style={globalstyles.notificationBadgeText}>3</Text>
+          </View>
+        </TouchableOpacity>
+      </View>
+
+      {/* Header
       <LinearGradient
         colors={['#007AFF', '#0056CC']}
         style={[styles.header, { paddingTop: insets.top + 20 }]}
@@ -150,7 +179,7 @@ export default function OrdersScreen() {
             <Filter size={20} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
-      </LinearGradient>
+      </LinearGradient> */}
 
       {/* Tabs */}
       <View style={styles.tabContainer}>
@@ -216,13 +245,52 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8F9FF',
   },
   header: {
-    paddingBottom: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  menuButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F9FAFB',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  notificationButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F9FAFB',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
   },
   headerContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  notificationBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#007AFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  notificationBadgeText: {
+    fontSize: 10,
+    fontFamily: 'Inter-Bold',
+    color: '#FFFFFF',
   },
   headerTitle: {
     fontSize: 20,
